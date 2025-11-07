@@ -43,7 +43,7 @@ Available options:
 
 def prepare_data(data):
     y = data["vmid"]
-    X = data.drop(columns=["vmid", "source", "destination", "options"])
+    X = data.drop(columns=["vmid", "source", "destination", "options", "header"])
 
     cols_to_convert = ['tos', 'length', 'id', 'ttl']
     for col in cols_to_convert:
