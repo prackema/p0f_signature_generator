@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+
+# References:
+#   - https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46
+#   - https://betterdev.blog/minimal-safe-bash-script-template/
+#   - https://www.redhat.com/en/blog/arguments-options-bash-scripts
+#
+# Disclaimer: No AI was used and or interacted upon this script
+
+trap cleanup SIGINT SIGTERM ERR EXIT
+
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+script_name=$(basename "${BASH_SOURCE[0]}")
+
+usage() {
+cat << EOF # remove the space between << and EOF, this is due to web plugin issue
+Usage: ${script_name} -[h|H|v|V|i|o|m|p|s|r|d]
+TcpDump to CSV (tdcsv): Convert a txt file (console output
+of tcpdump listening for tcp packets) to a csv file
+Example: ${script_name} -i tcpdump-stdout.txt -o data.csv -I "arch-linux"
+
+Miscellanious:
+-h, --help      Print this help and exit
+-V, --version   Print program version
+-v, --verbose   Debug the program
+
+Input control:
+-i, --input=file    Input file
+-m, --monitor=ip    Monitor mode for packets sent from specified IP.
+                    Does not require INPUT option. When specified the raw
+                    tcpdump output is kept in the INPUT file.
+                    When system interrupt is caught it will automatically
+                    export it to OUTPUT if specified, else a timestamped
+                    csv file. All output related flags apply here, except
+                    that if OUTPUT is not specified, a timestamped csv file
+                    is generated
+-r --remove-after   Remove the auto generated tmp/monitor-*.tmp input file
+                    when no --input is present.
+
+Output control:
+-o, --output=file   Output csv file
+-H, --noheader      Remove the csv header
+-I, --id=string     ID postfixing each row for classifiers
+-p, --max-packets=amount        Limit processing to amount of packets
+-s, --max-packet-size=bytes     Limit payload size of packets
+-d, --deduplicate   Removes all duplicates
+EOF
+    exit
+}
+
+version() {
+cat << EOF # remove the space between << and EOF, this is due to web plugin issue
+${script_name} 1.0.0
+EOF
+}
+
+create_csv() {
+    > "${output}"
+
+    [[ -z $(echo "${output}" | grep '\.[^/]\+$') ]] && output="${output}.csv"
+
+    header="version, tos, length, id, flags, ttl, protocol, header, source, destination, options"
+
+    [[ -n "${id}" ]] && header="${header}, id"
+
+    if [[ -z "${noheader}" ]] then
+        echo "version, tos, length, id, flags, ttl, protocol, header, source, destination, options, id" > "${output}"
+        [[ -n "${verbose}" ]] && msg "created header in ${output}"
+    fi
+    
+    [[ -n "${max_packet_size}" ]] && cut_option="| cut --bytes 1-${max_packet_size}"
+    [[ -n "${deduplicate}" ]] && deduplicate_option="| awk '!seen[\$0]++'"
+
+    eval "cat \"${input}\" | tail -n +2 ${cut_option} | sd \"\d\d:\d\d:\d\d.\d\d\d\d\d\d .*\" \",\" | sd \".*:  \" \"\" | sd \"\n\" \"\" | sd \" \" \"\" | sd \",\" \"\n\" ${cut_option} ${deduplicate_option} | sd \"\n\" \", ${id}\n\" | sed \"s/./&,/40;s/./&,/32;s/./&,/24;s/./&,/20;s/./&,/18;s/./&,/16;s/./&,/12;s/./&,/8;s/./&,/4;s/./&,/2\" | head -c -1 >> \"${output}\""
+
+    [[ -n "${id}" ]] && id_msg=" with classification id ${id}"
+    [[ -n "${verbose}" ]] && msg "converted ${input} to csv file ${output}${id_msg}"
+
+    if [[ -n "${max_packets}" ]] then
+        cat "${output}" | head -n $((${max_packets} + 1)) > "${output}.tmp"
+        mv "${output}.tmp" "${output}"
+    fi
+}
+
+cleanup() {
+    trap - SIGINT SIGTERM ERR EXIT
+
+    if [[ -n "${monitor}" ]] then
+        [[ -n "${verbose}" ]] && msg "ended monitor mode"
+        [[ -z "${output}" ]] && output="monitor-$(date +%s).csv"
+
+        create_csv
+
+        [[ -n "${remove_after}" ]] && [[ -n $(echo "${input}" | grep "\.tmp") ]] && rm "${input}"
+    fi
+}
+
+setup_colors() {
+    if [[ -t 2 ]] && [[ -z "${NO_COLOR-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
+        NOFORMAT='\033[0m' RED='\033[0;31m' GREEN='\033[0;32m' ORANGE='\033[0;33m' BLUE='\033[0;34m' PURPLE='\033[0;35m' CYAN='\033[0;36m' YELLOW='\033[1;33m'
+    else
+        NOFORMAT='' RED='' GREEN='' ORANGE='' BLUE='' PURPLE='' CYAN='' YELLOW=''
+    fi
+}
+
+msg() {
+    echo >&2 -e "${script_name}: ${1-}"
+}
+
+die() {
+    local msg=$1
+    local code=${2-1} # default exit status 1
+    msg "$msg"
+    exit "$code"
+}
+
+help() {
+    local msg=$1
+    die "${msg}\nTry '${script_name} --help' for more information."
+}
+
+parse_params() {
+    # default values of variables set from params
+    flag=0
+    param=''
+
+    while :; do
+        case "${1-}" in
+            -h | --help) usage ;;
+            -V | --version)
+                version
+                exit
+                ;;
+            --no-color) NO_COLOR=1 ;;
+            -H | --noheader) noheader=1 ;;
+            -v | --verbose) verbose=1 ;;
+            -d | --deduplicate) deduplicate=1 ;;
+            -r | --remove-after) remove_after=1 ;;
+            -i | --input)
+                input="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -o | --output)
+                output="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -I | --id)
+                id="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -m | --monitor)
+                monitor="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -p | --max-packets)
+                max_packets="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -s | --max-packet-size)
+                max_packet_size="${2-}"
+                [[ -z "${2-}" ]] && help "option requires an argument -- '${1:$(echo ${1}| sd "(^-*).*" "\$1" | sd "\n" "" | wc -c)}'"
+                shift
+                ;;
+            -?*) help "Unknown option: $1" ;;
+            *) break ;;
+        esac
+        shift
+    done
+
+    args=("$@")
+
+    # check required params and arguments
+    [[ -z "${input-}" ]] && [[ -z "${monitor}" ]] && help "Missing required parameter: input"
+    [[ -z "${output-}" ]] && [[ -z "${monitor}" ]] && help "Missing required parameter: output"
+    [[ ${#args[@]} -gt 0 ]] && help "Positional script arguments are not used in this script"
+
+    return 0
+}
+
+parse_params "$@"
+setup_colors
+version
+
+[[ -z "${verbose}" ]] && msg "verbose output suppressed, use -v to enable."
+
+# msg "${RED}Read parameters:${NOFORMAT}"
+# msg "- noheader: ${noheader}"
+# msg "- input: ${input}"
+# msg "- output: ${output}"
+# msg "- id: ${id}"
+# msg "- arguments: ${args[*]-}"
+
+if [[ -n "${monitor}" ]] then
+    [[ -z "${input}" ]] && input="tcpmonitor-$(date +%s).tmp"
+    [[ -n "${verbose}" ]] && msg "started monitor mode. Send interrupt using CTRL-C to stop and export to ${output}"
+    sudo tcpdump -i any src "${monitor}" -x >> "${input}"
+else
+    create_csv
+fi

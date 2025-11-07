@@ -251,6 +251,8 @@ static void tcp_find_match(u8 to_srv, struct tcp_sig* ts, u8 dupe_det,
 
   }
 
+  
+
   /* No fuzzy matching for userland tools. */
 
   if (fmatch && fmatch->class_id == -1) return;
@@ -1188,7 +1190,11 @@ struct tcp_sig* fingerprint_tcp(u8 to_srv, struct packet_data* pk,
 
   } else {
 
-    add_observation_field("os", NULL);
+    // Run inference and get name_id and flavor
+    s32 name_id;
+    u8* flavor;
+
+    OBSERVF("os", "%s %s", fp_os_names[name_id], flavor);
 
   }
 

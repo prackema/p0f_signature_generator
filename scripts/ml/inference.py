@@ -59,7 +59,7 @@ def main():
             sys.exit(1)
 
     print("Loading classification model...")
-    model = joblib.load('best_model_RandomForest.joblib') 
+    model = joblib.load('models/best_model_RandomForest.joblib') 
 
     print(f"Loaded {raw_data.shape[0]} packet(s).")
 
