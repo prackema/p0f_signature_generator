@@ -207,15 +207,18 @@ def evaluate(results, best_estimators, X_test, y_test):
     plt.show()
 
 def main():
-    flag = sys.argv[1] 
+    if len(sys.argv) <= 1:
+        show_help()
+        sys.exit(1)
+
+    flag = sys.argv[1]
 
     match flag:
         case "-f" | "--file":
             input_arg = sys.argv[2]
             print(f"Data from file: {input_arg}")
             data = pd.read_csv(input_arg, header=None, names=cols)
-            input_type = "file"
-            
+
             print("Initial shape:", data.shape)
             print("Columns:", data.columns.tolist())
 

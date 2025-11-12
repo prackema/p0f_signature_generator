@@ -1,11 +1,10 @@
 import joblib
 
-from sklearn_porter import Estimator
+from sklearn_porter import Porter
 
 model = joblib.load('models/best_model_DecisionTree.joblib')
-est = Estimator(model, language='c', template='attached')
+Porter(model, language='c', method='predict')
 
-print(est.port())
-
-est.template = 'exported'
-est.save(directory="../../../src/")
+# print(est.port())
+#
+# est.export(directory="../../../src/")

@@ -30,7 +30,7 @@ def prepare_data(raw_dataframe):
     return X_new
 
 def main():
-    if len(sys.argv):
+    if len(sys.argv) <= 1:
         show_help()
         sys.exit(1)
 
@@ -42,14 +42,15 @@ def main():
         case "-f" | "--file":
             input_arg = sys.argv[2]
             print(f"Data from file: {input_arg}")
-            raw_data = pd.read_csv(input_arg, header=None, names=cols)
+            print("helloww")
+            raw_data = pd.read_csv(input_arg, header=None, names=cols, encoding="utf-8")
             input_type = "file"
 
         case "-s" | "--string":
             input_arg = sys.argv[2]
             print(f"Data from string input: {input_arg}")
             string_data = io.StringIO(input_arg)
-            raw_data = pd.read_csv(string_data, header=None, names=cols)
+            raw_data = pd.read_csv(string_data, header=None, names=cols, encoding="utf-8")
             input_type = "line"
 
         case "-h" | "--help":
