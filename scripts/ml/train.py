@@ -215,6 +215,16 @@ def main():
             print(f"Data from file: {input_arg}")
             data = pd.read_csv(input_arg, header=None, names=cols)
             input_type = "file"
+            
+            print("Initial shape:", data.shape)
+            print("Columns:", data.columns.tolist())
+
+            X_train, X_test, y_train, y_test, num_cols, cat_cols = prepare_data(data)
+            preproc = make_pipeline(num_cols, cat_cols)
+            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+            models_and_grids = prepare_models(preproc)
+            results, best_estimators = train(models_and_grids, X_train, X_test, y_train, y_test, cv)
+            evaluate(results, best_estimators, X_test, y_test)
 
         case "-h" | "--help":
             show_help()
@@ -222,16 +232,6 @@ def main():
         case _:
             print("Unknown flag. Try -h or --help for help.")
             sys.exit(1)
-    
-    print("Initial shape:", data.shape)
-    print("Columns:", data.columns.tolist())
-
-    X_train, X_test, y_train, y_test, num_cols, cat_cols = prepare_data(data)
-    preproc = make_pipeline(num_cols, cat_cols)
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    models_and_grids = prepare_models(preproc)
-    results, best_estimators = train(models_and_grids, X_train, X_test, y_train, y_test, cv)
-    evaluate(results, best_estimators, X_test, y_test)
 
 
 if __name__ == "__main__":
