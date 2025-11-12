@@ -31,13 +31,15 @@ set_config(display='diagram')
 cols = ["version","tos","length","id","flags","ttl","protocol","header","source","destination","options","vmid"]
 
 def show_help():
-    print("""Usage: train -[h|f]
+    print("""Usage: train -[h|f|m]
 
 Trains the classifing model
 
 Available options:
 -h, --help      Print this help and exit
 -f, --file      Reads the input from a file
+-m, --model     Selects the model to train (DecisionTree, RandomForest, KNN, LogisticRegression, NaiveBayes, MLPClassifier)
+                If not specified, all models are trained.
 """)
     sys.exit()
 
@@ -134,17 +136,17 @@ def prepare_models(preproc):
             ]),
             "param_grid": {}
         },
-        "MLPClassifier": { 
-            "pipeline": Pipeline([
-                ("preproc", preproc),
-                ("clf", MLPClassifier(max_iter=500, random_state=42))
-            ]),
-            "param_grid": {
-                "clf__hidden_layer_sizes": [(50,), (100,), (50, 50)],
-                "clf__activation": ["relu", "tanh"],
-                "clf__alpha": [0.0001, 0.001],
-            }
-        },
+         "MLPClassifier": { 
+             "pipeline": Pipeline([
+                 ("preproc", preproc),
+                 ("clf", MLPClassifier(max_iter=500, random_state=42))
+             ]),
+             "param_grid": {
+                 "clf__hidden_layer_sizes": [(50,), (100,), (50, 50)],
+                 "clf__activation": ["relu", "tanh"],
+                 "clf__alpha": [0.0001, 0.001],
+             }
+         },
     }
     return models_and_grids
 
@@ -207,21 +209,33 @@ def evaluate(results, best_estimators, X_test, y_test):
     plt.show()
 
 def main():
-    flag = sys.argv[1] 
+    model_to_run = None
+    i = 1
+    while i < len(sys.argv):
+        flag = sys.argv[i] 
 
-    match flag:
-        case "-f" | "--file":
-            input_arg = sys.argv[2]
-            print(f"Data from file: {input_arg}")
-            data = pd.read_csv(input_arg, header=None, names=cols)
-            input_type = "file"
+        match flag:
+            case "-f" | "--file":
+                input_arg = sys.argv[i + 1]
+                print(f"Data from file: {input_arg}")
+                data = pd.read_csv(input_arg, header=None, names=cols)
+                input_type = "file"
+                i += 2
+            case "-m" | "--model":
+                model_to_run = sys.argv[i + 1]
+                print(f"Selected model: {model_to_run}")
+                break
+                
+            case "-h" | "--help":
+                show_help()
 
-        case "-h" | "--help":
-            show_help()
+            case _:
+                print("Unknown flag. Try -h or --help for help.")
+                sys.exit(1)
 
-        case _:
-            print("Unknown flag. Try -h or --help for help.")
-            sys.exit(1)
+    if data is None:
+        print("Error: No data file provided. Use -f <file>")
+        sys.exit(1)
     
     print("Initial shape:", data.shape)
     print("Columns:", data.columns.tolist())
@@ -230,7 +244,18 @@ def main():
     preproc = make_pipeline(num_cols, cat_cols)
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     models_and_grids = prepare_models(preproc)
-    results, best_estimators = train(models_and_grids, X_train, X_test, y_train, y_test, cv)
+
+    if model_to_run:
+        if model_to_run in models_and_grids:
+            selected = {model_to_run: models_and_grids[model_to_run]}
+            print(f"\nRunning only model: {model_to_run}")
+            results, best_estimators = train(selected, X_train, X_test, y_train, y_test, cv)
+        else:
+            print(f"Model {model_to_run} not recognized")
+            sys.exit(1)
+    else:
+        results, best_estimators = train(models_and_grids, X_train, X_test, y_train, y_test, cv)
+
     evaluate(results, best_estimators, X_test, y_test)
 
 
