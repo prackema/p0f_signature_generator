@@ -41,7 +41,6 @@ Available options:
 -m, --model     Selects the model to train (DecisionTree, RandomForest, KNN, LogisticRegression, NaiveBayes, MLPClassifier)
                 If not specified, all models are trained.
 """)
-    sys.exit()
 
 def prepare_data(data):
     y = data["vmid"]
@@ -186,7 +185,7 @@ def train(models_and_grids, X_train, X_test, y_train, y_test, cv):
 def evaluate(results, best_estimators, X_test, y_test):
     results_df = pd.DataFrame(results).sort_values("Test Accuracy", ascending=False).reset_index(drop=True)
     print("\nSummary of results")
-    print(results_df) 
+    print(results_df)
 
     best_idx = results_df["Test Accuracy"].idxmax()
     p0f_classifier = results_df.loc[best_idx, "Model"]
@@ -210,6 +209,7 @@ def evaluate(results, best_estimators, X_test, y_test):
 
 def main():
     model_to_run = None
+    data = None
     i = 1
     while i < len(sys.argv):
         flag = sys.argv[i] 
@@ -219,15 +219,16 @@ def main():
                 input_arg = sys.argv[i + 1]
                 print(f"Data from file: {input_arg}")
                 data = pd.read_csv(input_arg, header=None, names=cols)
-                input_type = "file"
                 i += 2
+
             case "-m" | "--model":
                 model_to_run = sys.argv[i + 1]
                 print(f"Selected model: {model_to_run}")
                 break
-                
+
             case "-h" | "--help":
                 show_help()
+                sys.exit(0)
 
             case _:
                 print("Unknown flag. Try -h or --help for help.")
@@ -250,9 +251,11 @@ def main():
             selected = {model_to_run: models_and_grids[model_to_run]}
             print(f"\nRunning only model: {model_to_run}")
             results, best_estimators = train(selected, X_train, X_test, y_train, y_test, cv)
+
         else:
             print(f"Model {model_to_run} not recognized")
             sys.exit(1)
+    
     else:
         results, best_estimators = train(models_and_grids, X_train, X_test, y_train, y_test, cv)
 
