@@ -10,6 +10,7 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 script_name=$(basename "${BASH_SOURCE[0]}")
+lines=3000
 
 usage() {
 cat << EOF
@@ -23,6 +24,7 @@ Options:
   -V, --version     Print program version
   -v, --verbose     Print debug information
   -o, --output FILE Specify output CSV file name
+  -l, --lines LINES Specify amount of lines to concatinate per file
 EOF
     exit
 }
@@ -40,7 +42,7 @@ merge() {
   for file in "${args[@]}"; do
     [[ ! -f "$file" ]] && msg "${YELLOW}Warning:${NOFORMAT} '$file' not found, skipping." && continue
     [[ -n "${verbose}" ]] && msg "Processing $file"
-    head -n 3000 "$file" >> "$output_file"
+    head -n lines "$file" >> "$output_file"
   done
 
   msg "${GREEN}Merged CSV written to:${NOFORMAT} ${output_file}"
@@ -82,6 +84,11 @@ parse_params() {
       -v | --verbose) verbose=1 ;;
       -o | --output)
         output="${2-}"
+        [[ -z "${2-}" ]] && help "Option requires an argument -- '${1}'"
+        shift
+        ;;
+      -l | --lines)
+        lines="${2-}"
         [[ -z "${2-}" ]] && help "Option requires an argument -- '${1}'"
         shift
         ;;
