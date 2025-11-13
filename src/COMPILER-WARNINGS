@@ -1,0 +1,49 @@
+p0f.c: In function ‘prepare_pcap’:
+p0f.c:488:9: warning: ‘pcap_lookupdev’ is deprecated: use 'pcap_findalldevs' and use the first device [-Wdeprecated-declarations]
+  488 |         use_iface = (u8*)pcap_lookupdev(pcap_err);
+      |         ^~~~~~~~~
+In file included from /usr/include/pcap.h:43,
+                 from p0f.c:37:
+/usr/include/pcap/pcap.h:444:18: note: declared here
+  444 | PCAP_API char   *pcap_lookupdev(char *);
+      |                  ^~~~~~~~~~~~~~
+api.c: In function ‘handle_query’:
+api.c:73:5: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   73 |     strncpy((char*)r->os_name, (char*)fp_os_names[h->last_name_id],
+      |     ^
+api.c:77:8: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   77 |        strncpy((char*)r->os_flavor, (char*)h->last_flavor, P0F_STR_MAX + 1);
+      |        ^
+api.c:83:5: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   83 |     strncpy((char*)r->http_name, (char*)fp_os_names[h->http_name_id],
+      |     ^
+api.c:87:7: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   87 |       strncpy((char*)r->http_flavor, (char*)h->http_flavor, P0F_STR_MAX + 1);
+      |       ^
+api.c:92:5: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   92 |     strncpy((char*)r->link_type, (char*)h->link_type, P0F_STR_MAX + 1);
+      |     ^
+api.c:95:5: warning: ‘__builtin_strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+   95 |     strncpy((char*)r->language, (char*)h->language, P0F_STR_MAX + 1);
+      |     ^
+fp_tcp.c: In function ‘fingerprint_tcp’:
+fp_tcp.c:1195:35: warning: excess elements in scalar initializer
+ 1195 |     double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
+      |                                   ^~
+fp_tcp.c:1195:35: note: (near initialization for ‘samples’)
+fp_tcp.c:1195:44: warning: excess elements in scalar initializer
+ 1195 |     double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
+      |                                            ^~
+fp_tcp.c:1195:44: note: (near initialization for ‘samples’)
+fp_tcp.c:1195:60: warning: excess elements in scalar initializer
+ 1195 |     double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
+      |                                                            ^~
+fp_tcp.c:1195:60: note: (near initialization for ‘samples’)
+fp_tcp.c:1195:76: warning: excess elements in scalar initializer
+ 1195 |     double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
+      |                                                                            ^~
+fp_tcp.c:1195:76: note: (near initialization for ‘samples’)
+fp_tcp.c:1195:85: warning: excess elements in scalar initializer
+ 1195 |     double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
+      |                                                                                     ^~
+fp_tcp.c:1195:85: note: (near initialization for ‘samples’)

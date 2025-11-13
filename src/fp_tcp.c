@@ -25,6 +25,7 @@
 #include "tcp.h"
 #include "readfp.h"
 #include "p0f.h"
+#include "classifier.h"
 
 #include "fp_tcp.h"
 
@@ -1191,10 +1192,9 @@ struct tcp_sig* fingerprint_tcp(u8 to_srv, struct packet_data* pk,
   } else {
 
     // Run ML inference and get name_id and flavor
-    s32 name_id;
-    u8* flavor;
+    double samples = {pk->ip_ver, pk->tos, pk->ip_opt_len, pk->ip_opt_len, pk->ttl, pk->tcp_type};
 
-    OBSERVF("os", "%s %s", fp_os_names[name_id], flavor);
+    add_observation_field("os", (u8*) switch_name(predict(&samples)));
 
   }
 
