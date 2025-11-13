@@ -28,7 +28,7 @@ following.
 - **`--deduplicate`**        - remove any duplicate packets (after pruning)
 - **`--noheader`**           - our program does not require a header.
 
-You may need to change `data/windows-server-2022.txt` to the file you have. 
+You may need to change `data/windows-server-2022.txt` to the file you have.
 
 ### No Tcpdump .txt File?
 
