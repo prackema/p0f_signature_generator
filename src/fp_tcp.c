@@ -1190,7 +1190,7 @@ struct tcp_sig* fingerprint_tcp(u8 to_srv, struct packet_data* pk,
 
   } else {
 
-    // Run inference and get name_id and flavor
+    // Run ML inference and get name_id and flavor
     s32 name_id;
     u8* flavor;
 

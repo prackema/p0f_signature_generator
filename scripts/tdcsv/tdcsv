@@ -71,7 +71,7 @@ create_csv() {
     [[ -n "${max_packet_size}" ]] && cut_option="| cut --bytes 1-${max_packet_size}"
     [[ -n "${deduplicate}" ]] && deduplicate_option="| awk '!seen[\$0]++'"
 
-    eval "cat \"${input}\" | tail -n +2 ${cut_option} | sd \"\d\d:\d\d:\d\d.\d\d\d\d\d\d .*\" \",\" | sd \".*:  \" \"\" | sd \"\n\" \"\" | sd \" \" \"\" | sd \",\" \"\n\" ${cut_option} ${deduplicate_option} | sd \"\n\" \", ${id}\n\" | sed \"s/./&,/40;s/./&,/32;s/./&,/24;s/./&,/20;s/./&,/18;s/./&,/16;s/./&,/12;s/./&,/8;s/./&,/4;s/./&,/2\" | head -c -1 >> \"${output}\""
+    eval "cat \"${input}\" | tail -n +2 | sd \"\d\d:\d\d:\d\d.\d\d\d\d\d\d .*\" \",\" | sd \".*:  \" \"\" | sd \"\n\" \"\" | sd \"\r\" \"\" | sd \" \" \"\" | sd \",\" \"\n\" ${cut_option} ${deduplicate_option} | sd \"\n\" \", ${id}\n\" | sed \"s/./&,/40;s/./&,/32;s/./&,/24;s/./&,/20;s/./&,/18;s/./&,/16;s/./&,/12;s/./&,/8;s/./&,/4;s/./&,/2\" | head -c -1 >> \"${output}\""
 
     [[ -n "${id}" ]] && id_msg=" with classification id ${id}"
     [[ -n "${verbose}" ]] && msg "converted ${input} to csv file ${output}${id_msg}"
