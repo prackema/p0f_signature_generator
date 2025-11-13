@@ -56,3 +56,15 @@ contains the raw `tcpdump` output, and resides in the data/ directory.
 This file can be automatically removed using the `--remove` flag.
 All the other options are for generating the `.csv` file from the
 (temporary) `windows-server-2022.txt` file.
+
+### Merge CSV files together
+
+To merge multiple `.csv` files, you can use the `merge.sh` utility.
+
+```sh
+./merge.sh --output merged.csv *.csv
+```
+
+By default, the script will limit each file to 3000 lines. This
+behaviour can of course be changed with the `--lines` flag, and
+afterwards specifying the maximum amount of lines per file.
