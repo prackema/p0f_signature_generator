@@ -1,11 +1,21 @@
-### p0f Machine Learning Classifier Expansion
+# p0f Machine Learning Classifier Expansion
 
-This project aims to expand the p0f passive packet analysis tool by adding a fallback machine learning classifier.
+This project aims to expand the p0f passive packet analysis tool
+by adding a fallback machine learning classifier.
 
-### Running the classifier stand-alone
+### Running the Program
 
-The classifier can be run in inference mode by using the script inference.py in scripts/ml using uv run infererence.py
+The program can be run by first building the project. Under `src/`
+you will find the `build.sh` script which you can run with
+`./src/build.sh`.
 
-### Train the classifier
+Once the above command finishes, the program can be run by
+entering `./rc/pof`.
 
-The classifier can be retrained using the script train.py
+### Creating Training Datasets
+
+See `scripts/tdcsv/README.md`
+
+### Training, Running and Porting ML Models
+
+See `scripts/ml/README.md`
